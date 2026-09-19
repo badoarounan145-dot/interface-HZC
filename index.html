@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HZC PLATFORM</title>
+<style>
+body{margin:0;background:#0f172a;color:white;font-family:Arial;text-align:center;padding:20px}
+.card{background:#1e293b;padding:20px;border-radius:15px;max-width:400px;margin:20px auto}
+input,select,textarea{width:100%;padding:14px;border-radius:10px;border:none;margin:8px 0;box-sizing:border-box;font-size:16px}
+button{width:100%;padding:14px;background:#22c55e;border:none;border-radius:10px;color:white;font-weight:bold;font-size:16px;cursor:pointer;margin-top:10px}
+#appSection{display:none}
+.result{background:#0f172a;padding:15px;border-radius:10px;margin-top:15px;word-break:break-all}
+a{color:#22c55e}
+</style>
+</head>
+<body>
+
+<h1>🌍 HZC PLATFORM</h1>
+<p>Code 7777 = ILLIMITE pour Arouna</p>
+
+<div class="card" id="loginCard">
+<input id="codeInput" placeholder="Ton code ici" />
+<select id="pays"><option>Côte d'Ivoire</option><option>Sénégal</option><option>Mali</option><option>Burkina</option></select>
+<button onclick="validerCode()">Valider</button>
+<p id="loginMsg"></p>
+</div>
+
+<div class="card" id="appSection">
+<h2>Créer ton site en ligne</h2>
+<input id="nom" placeholder="Nom de ta boutique ex: Boutique Seydou" />
+<textarea id="desc" placeholder="Description: Vente de chaussures à Cocody..."></textarea>
+<button onclick="creerSite()">🚀 Créer mon site - Méthode 1</button>
+<div id="result"></div>
+<hr style="margin:20px 0;border-color:#334155">
+<p>OU publier ton app complète (Méthode 2)</p>
+<input type="file" id="appFiles" multiple style="background:white;color:black" />
+<button onclick="deployApp()" style="background:#3b82f6">📦 Déployer mon application</button>
+<div id="appResult"></div>
+</div>
+
+<script>
+const BACKEND = '/api/deploy';
+
+function validerCode(){
+  const code = document.getElementById('codeInput').value.trim();
+  if(code==='7777'){
+    document.getElementById('loginCard').style.display='none';
+    document.getElementById('appSection').style.display='block';
+  } else {
+    document.getElementById('loginMsg').innerText='Code invalide';
+  }
+}
+
+async function creerSite(){
+  const nom = document.getElementById('nom').value;
+  const description = document.getElementById('desc').value;
+  const pays = document.getElementById('pays').value;
+  if(!nom) return alert('Mets un nom');
+  document.getElementById('result').innerHTML='⏳ Création en cours... 15 sec';
+
+  try{
+    const res = await fetch(BACKEND,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ nom, description, pays })
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById('result').innerHTML=`✅ Site en ligne!<br><br><a href="${data.url}" target="_blank">${data.url}</a><br><br><div style="background:white;color:black;padding:15px;border-radius:10px;margin-top:10px;text-align:left"><h3>${nom}</h3><p>${description}</p><p>${pays}</p></div><br><button onclick="navigator.clipboard.writeText('${data.url}')">Copier le lien</button>`;
+    } else {
+      document.getElementById('result').innerHTML='❌ Erreur: '+data.error;
+    }
+  } catch(e){
+    document.getElementById('result').innerHTML='❌ Erreur réseau: '+e.message;
+  }
+}
+
+async function deployApp(){
+  const input = document.getElementById('appFiles');
+  if(!input.files.length) return alert('Choisis tes fichiers');
+  const files=[];
+  for(const file of input.files){
+    const buf = await file.arrayBuffer();
+    let binary=''; const bytes=new Uint8Array(buf);
+    for(let i=0;i<bytes.byteLength;i++) binary+=String.fromCharCode(bytes[i]);
+    const base64=btoa(binary);
+    files.push({ file: file.name, data: base64 });
+  }
+  document.getElementById('appResult').innerText=`Déploiement de ${files.length} fichiers...`;
+  const res = await fetch(BACKEND,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nom:'mon-app', files})});
+  const data=await res.json();
+  if(data.success){
+    document.getElementById('appResult').innerHTML=`✅ App en ligne!<br><a href="${data.url}" target="_blank">${data.url}</a>`;
+  } else {
+    document.getElementById('appResult').innerText='Erreur: '+data.error;
+  }
+}
+</script>
+</body>
+  </html>
